@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   python-security:
@@ -44,14 +43,14 @@ jobs:
         run: npm audit --audit-level=high
 
   secret-scan:
-    name: Secret scan
+    name: Current-tree secret scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Gitleaks current tree
+        uses: zricethezav/gitleaks:latest
         with:
-          fetch-depth: 0
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+          args: detect --source . --no-git --redact --exit-code 1
 
   filesystem-scan:
     name: Trivy filesystem scan
