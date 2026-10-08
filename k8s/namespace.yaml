@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: iems-production
+  labels:
+    app.kubernetes.io/name: iems
+    app.kubernetes.io/environment: production

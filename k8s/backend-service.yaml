@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iems-backend
+  namespace: iems-production
+  labels:
+    app.kubernetes.io/name: iems-backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: iems-backend

@@ -1,0 +1,65 @@
+# === Python / Backend ===
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+*.log
+
+# === Node / Frontend ===
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# === Environment & Secrets (NEVER commit) ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_ed25519
+*.secret
+
+# === Database files ===
+*.db
+*.sqlite
+*.sqlite3
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# === IDE files ===
+.vscode/settings.json
+.idea/
+*.iml
+
+# === Scratch / Temp ===
+scratch/
+/tmp/
+
+# === CI/CD artifacts ===
+*.tar.gz
+*.zip

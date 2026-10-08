@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iems-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iems_db
+      POSTGRES_USER: iems_user
+      POSTGRES_PASSWORD: iems_secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - iems-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iems_user -d iems_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: iems-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://iems_user:iems_secure_password@postgres:5432/iems_db
+      SECRET_KEY: iems-production-secret-key-must-be-rotated-via-vault-or-k8s!
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+    networks:
+      - iems-network
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: iems-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - iems-network
+
+volumes:
+  postgres_data:
+
+networks:
+  iems-network:
+    driver: bridge

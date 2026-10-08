@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iems-frontend
+  namespace: iems-production
+  labels:
+    app.kubernetes.io/name: iems-frontend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: iems-frontend
