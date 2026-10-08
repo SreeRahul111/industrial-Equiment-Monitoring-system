@@ -6,20 +6,15 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from backend.app.config import settings
 from backend.app.database import engine, Base, SessionLocal
-from backend.app.models import *  # ensure all models are registered
+from backend.app.models import *
 from backend.app.seed import seed_database
 from backend.app.api import api_router
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("iems")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create tables and seed
     logger.info("Initializing IEMS database schema...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -33,48 +28,37 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Mission-critical Industrial Equipment Monitoring System (IEMS) secure API",
+    description="Industrial Equipment Monitoring System secure API",
     lifespan=lifespan
 )
 
-# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for local dev / proxied vite
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
-# Safe Validation Error Handler (no internal traceback exposure)
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = []
     for err in exc.errors():
         field = ".".join(str(loc) for loc in err.get("loc", []))
-        msg = err.get("msg", "Invalid value")
-        errors.append(f"{field}: {msg}")
-    
+        errors.append(f"{field}: {err.get('msg', 'Invalid value')}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "detail": "Request payload validation failed",
-            "validation_errors": errors
-        }
+        content={"detail": "Request payload validation failed", "validation_errors": errors},
     )
 
-# Global Safe Exception Handler
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled server error on {request.method} {request.url.path}: {str(exc)}", exc_info=True)
+    logger.error("Unhandled server error on %s %s", request.method, request.url.path, exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "detail": "An internal server error occurred. This incident has been logged for security audit."
-        }
+        content={"detail": "An internal server error occurred. This incident has been logged for security audit."},
     )
 
-# Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
@@ -84,5 +68,5 @@ def root():
         "version": settings.VERSION,
         "status": "OPERATIONAL",
         "docs_url": "/docs",
-        "api_v1": settings.API_V1_STR
+        "api_v1": settings.API_V1_STR,
     }
